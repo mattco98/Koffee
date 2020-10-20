@@ -69,17 +69,24 @@ fun InstructionAssembly.newarray(type: TypeLike) {
         BYTE -> T_BYTE
         SHORT -> T_SHORT
         INT -> T_INT
-
         Type.FLOAT -> T_FLOAT
         Type.LONG -> T_LONG
         Type.DOUBLE -> T_DOUBLE
-
         else -> error("Invalid type for primitive array creation")
     }))
+}
+inline fun <reified T> InstructionAssembly.newarray() {
+    newarray(T::class)
 }
 fun InstructionAssembly.anewarray(type: TypeLike) {
     instructions.add(TypeInsnNode(ANEWARRAY, coerceType(type).internalName))
 }
+inline fun <reified T> InstructionAssembly.anewarray() {
+    anewarray(T::class)
+}
 fun InstructionAssembly.multianewarray(type: TypeLike, dimensions: Int) {
     instructions.add(MultiANewArrayInsnNode(coerceType(type).descriptor, dimensions))
+}
+inline fun <reified T> InstructionAssembly.multianewarray(dimensions: Int) {
+    multianewarray(T::class, dimensions)
 }

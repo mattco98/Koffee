@@ -11,3 +11,9 @@ val InstructionAssembly.monitorenter: U get() {
 val InstructionAssembly.monitorexit: U get() {
     instructions.add(InsnNode(MONITOREXIT))
 }
+fun InstructionAssembly.synchronized(block: () -> Unit) {
+    dup
+    monitorenter
+    block()
+    monitorexit
+}
