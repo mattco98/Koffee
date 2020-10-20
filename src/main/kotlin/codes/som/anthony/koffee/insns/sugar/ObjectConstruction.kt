@@ -7,12 +7,9 @@ import codes.som.anthony.koffee.insns.jvm.new
 import codes.som.anthony.koffee.types.TypeLike
 import codes.som.anthony.koffee.types.void
 
-fun <S : InstructionAssembly> S.construct(type: TypeLike, vararg constructorTypes: TypeLike, initializerName: String = "<init>", initializerBlock: S.() -> Unit = {}) {
-    val returnType = constructorTypes.getOrElse(0) { void }
-    val parameterTypes = constructorTypes.drop(1).toTypedArray()
-
+fun <S : InstructionAssembly> S.construct(type: TypeLike, vararg parameterTypes: TypeLike, initializerName: String = "<init>", initializerBlock: S.() -> Unit = {}) {
     new(type)
     dup
     initializerBlock(this)
-    invokespecial(type, initializerName, returnType, *parameterTypes)
+    invokespecial(type, initializerName, void, *parameterTypes)
 }
