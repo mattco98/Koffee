@@ -10,6 +10,8 @@ import org.objectweb.asm.tree.MethodNode
 import org.objectweb.asm.tree.TryCatchBlockNode
 
 class MethodAssembly(val node: MethodNode) : InstructionAssembly, TryCatchContainer, LabelScope, ModifiersAccess, TypesAccess {
+    var currentLocalIndex = node.maxLocals
+
     override val instructions: InsnList
         get() = node.instructions
 

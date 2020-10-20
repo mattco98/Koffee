@@ -8,7 +8,7 @@ import codes.som.anthony.koffee.types.TypeLike
 import codes.som.anthony.koffee.types.void
 
 fun <S : InstructionAssembly> S.construct(type: TypeLike, vararg constructorTypes: TypeLike, initializerName: String = "<init>", initializerBlock: S.() -> Unit = {}) {
-    val returnType = constructorTypes.getOrElse(0, { void })
+    val returnType = constructorTypes.getOrElse(0) { void }
     val parameterTypes = constructorTypes.drop(1).toTypedArray()
 
     new(type)
