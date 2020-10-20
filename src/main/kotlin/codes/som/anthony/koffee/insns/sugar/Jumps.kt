@@ -23,17 +23,32 @@ fun InstructionAssembly.jump(condition: JumpCondition, label: TypeLike) {
     instructions.add(JumpInsnNode(condition.opcode, coerceLabel(label)))
 }
 
-fun InstructionAssembly.ifStatement(vararg conditions: JumpCondition, block: InstructionAssembly.() -> Unit) {
+/**
+ * If-statement helper.
+ *
+ * Note that this helper evaluates it's conditions similar to Java, not
+ * like JVM bytecode. In Java, if-statements run their code if the condition
+ * is true, whereas in bytecode if-statements _skip_ their code if the
+ * condition is true. As the latter is quite unintuitive, that is not the
+ * default behavior here. However, it can be enabled by setting the
+ * interpretLikeBytecode argument to true
+ */
+fun InstructionAssembly.ifStatement(vararg conditions: JumpCondition, interpretLikeBytecode: Boolean = false, block: InstructionAssembly.() -> Unit) {
     val label = makeLabel()
 
-    for (condition in conditions)
-        jump(condition, label)
+    for (condition in conditions) {
+        val opcode = if (interpretLikeBytecode) condition.opcode else condition.opposite
+        instructions.add(JumpInsnNode(opcode, label))
+    }
 
     this.block()
     placeLabel(label)
 }
 
-fun InstructionAssembly.ifElseStatement(vararg conditions: JumpCondition, block: IfElseBuilder.() -> Unit) {
+/**
+ * See ifStatement above
+ */
+fun InstructionAssembly.ifElseStatement(vararg conditions: JumpCondition, interpretLikeBytecode: Boolean = false, block: IfElseBuilder.() -> Unit) {
     val ifElse = IfElseBuilder()
     ifElse.block()
     if (ifElse.ifBlock == null || ifElse.elseBlock == null)
@@ -42,8 +57,10 @@ fun InstructionAssembly.ifElseStatement(vararg conditions: JumpCondition, block:
     val ifLabel = makeLabel()
     val endLabel = makeLabel()
 
-    for (condition in conditions)
-        jump(condition, ifLabel)
+    for (condition in conditions) {
+        val opcode = if (interpretLikeBytecode) condition.opcode else condition.opposite
+        instructions.add(JumpInsnNode(opcode, ifLabel))
+    }
 
     this.apply(ifElse.ifBlock!!)
     goto(endLabel)
@@ -65,18 +82,17 @@ class IfElseBuilder {
     }
 }
 
-enum class JumpCondition(val opcode: Int) {
-    True(IFNE),
-    False(IFEQ),
-    Equal(IFEQ),
-    NotEqual(IFNE),
-    LessThan(IFLT),
-    GreaterThan(IFGT),
-    LessThanOrEqual(IFLE),
-    GreaterThanOrEqual(IFGE),
-    Null(IFNULL),
-    NonNull(IFNONNULL),
-    Goto(GOTO),
-    RefEqual(IF_ACMPEQ),
-    RefNotEqual(IF_ACMPNE),
+enum class JumpCondition(val opcode: Int, val opposite: Int) {
+    True(IFNE, IFEQ),
+    False(IFEQ, IFNE),
+    Equal(IFEQ, IFNE),
+    NotEqual(IFNE, IFEQ),
+    LessThan(IFLT, IFGE),
+    GreaterThan(IFGT, IFLE),
+    LessThanOrEqual(IFLE, IFGT),
+    GreaterThanOrEqual(IFGE, IFLT),
+    Null(IFNULL, IFNONNULL),
+    NonNull(IFNONNULL, IFNULL),
+    RefEqual(IF_ACMPEQ, IF_ACMPNE),
+    RefNotEqual(IF_ACMPNE, IF_ACMPEQ),
 }
